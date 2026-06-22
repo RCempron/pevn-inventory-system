@@ -31,7 +31,7 @@ onMounted(() => {
 
     <ItemForm v-else :token="token" @item-added="fetchItems" />
 
-    <ItemList :items="items" :token="token" @item-changed="fetchItems" />
+    <ItemList v-if="token" :items="items" :token="token" @item-changed="fetchItems" />
   </div>
 </template>
 
