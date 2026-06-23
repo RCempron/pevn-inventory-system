@@ -1,10 +1,13 @@
 <script setup>
 import { ref } from 'vue'
+import { Eye, EyeOff } from 'lucide-vue-next'
 
 const loginForm = ref({ username: '', password: '' })
 const API_URL = 'http://192.168.254.106:3000'
 const error = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
+const success = ref(false)
 
 const emit = defineEmits(['login-success'])
 
@@ -19,7 +22,10 @@ async function login() {
     })
     const data = await response.json()
     if (data.token) {
-      emit('login-success', data.token)
+      success.value = true
+      setTimeout(() => {
+        emit('login-success', data.token)
+      }, 600)
     } else {
       error.value = data.error || 'Login failed'
     }
@@ -32,133 +38,54 @@ async function login() {
 </script>
 
 <template>
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="login-tab"></div>
-      <div class="login-brand">📦</div>
-      <h1 class="login-title">My Inventory</h1>
-      <p class="login-subtitle">Sign in to manage your stock</p>
+  <div class="min-h-[70vh] flex items-center justify-center">
+    <div class="relative bg-white rounded-2xl px-9 pt-10 pb-8 w-full max-w-[360px] shadow-[0_8px_30px_rgba(15,76,58,0.12)] border border-[#ece6d8]">
+      <!-- Top accent tab -->
+      <div class="absolute -top-[3px] left-8 w-14 h-1.5 bg-amber-500 rounded-b"></div>
 
-      <form @submit.prevent="login" class="login-form">
-        <label class="field-label">Username</label>
-        <input v-model="loginForm.username" placeholder="Enter your username" required />
+      <div class="text-3xl text-center mb-1">📦</div>
+      <h1 class="text-center text-xl font-bold text-emerald-900 mb-1">My Inventory</h1>
+      <p class="text-center text-xs text-stone-500 mb-6">Sign in to manage your stock</p>
 
-        <label class="field-label">Password</label>
-        <input v-model="loginForm.password" type="password" placeholder="Enter your password" required />
+      <form @submit.prevent="login" class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-stone-800 mt-2.5">Username</label>
+        <input
+          v-model="loginForm.username"
+          placeholder="Enter your username"
+          required
+          class="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-sm bg-stone-50 text-stone-800 focus:outline-none focus:border-emerald-900 focus:bg-white"
+        />
 
-        <p v-if="error" class="login-error">{{ error }}</p>
+        <label class="text-xs font-semibold text-stone-800 mt-2.5">Password</label>
+        <div class="relative flex items-center">
+          <input
+            v-model="loginForm.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Enter your password"
+            required
+            class="w-full px-3 py-2.5 pr-10 border border-stone-300 rounded-lg text-sm bg-stone-50 text-stone-800 focus:outline-none focus:border-emerald-900 focus:bg-white"
+          />
+          <button
+            type="button"
+            @click="showPassword = !showPassword"
+            :title="showPassword ? 'Hide password' : 'Show password'"
+            class="absolute right-2 p-1 rounded-md text-stone-400 hover:text-emerald-900"
+          >
+            <component :is="showPassword ? EyeOff : Eye" :size="18" />
+          </button>
+        </div>
 
-        <button type="submit" :disabled="loading">
+        <p v-if="error" class="text-red-600 text-xs mt-2">{{ error }}</p>
+        <p v-if="success" class="text-emerald-900 text-xs font-semibold mt-2">Login successful, redirecting...</p>
+
+        <button
+          type="submit"
+          :disabled="loading"
+          class="mt-5 py-3 rounded-lg bg-emerald-900 text-white text-sm font-semibold transition-colors hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-default disabled:hover:bg-emerald-900"
+        >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
     </div>
   </div>
 </template>
-
-<style scoped>
-.login-wrap {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-card {
-  position: relative;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 40px 36px 32px;
-  width: 100%;
-  max-width: 360px;
-  box-shadow: 0 8px 30px rgba(15, 76, 58, 0.12);
-  border: 1px solid #ece6d8;
-}
-
-.login-tab {
-  position: absolute;
-  top: -3px;
-  left: 32px;
-  width: 56px;
-  height: 6px;
-  background: #d4a24c;
-  border-radius: 0 0 4px 4px;
-}
-
-.login-brand {
-  font-size: 32px;
-  text-align: center;
-  margin-bottom: 4px;
-}
-
-.login-title {
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f4c3a;
-  margin: 0 0 4px;
-}
-
-.login-subtitle {
-  text-align: center;
-  font-size: 13px;
-  color: #8a8378;
-  margin: 0 0 24px;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #2b2b2b;
-  margin-top: 10px;
-}
-
-input {
-  padding: 10px 12px;
-  border: 1px solid #e0dace;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #faf7f0;
-  color: #2b2b2b;
-}
-
-input:focus {
-  outline: none;
-  border-color: #0f4c3a;
-  background: #ffffff;
-}
-
-.login-error {
-  color: #c0392b;
-  font-size: 13px;
-  margin: 8px 0 0;
-}
-
-button {
-  margin-top: 20px;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: #0f4c3a;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-button:hover:not(:disabled) {
-  background: #0c3c2e;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-</style>
