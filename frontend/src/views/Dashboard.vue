@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Bar, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -14,6 +14,8 @@ const items = ref([])
 const API_URL = 'http://192.168.254.106:3000'
 const LOW_STOCK_THRESHOLD = 10
 
+let pollInterval = null
+
 async function fetchItems() {
   const response = await fetch(`${API_URL}/items`)
   const data = await response.json()
@@ -22,6 +24,11 @@ async function fetchItems() {
 
 onMounted(() => {
   fetchItems()
+  pollInterval = setInterval(fetchItems, 5000)
+})
+
+onUnmounted(() => {
+  clearInterval(pollInterval)
 })
 
 const totalItems = computed(() => items.value.length)
