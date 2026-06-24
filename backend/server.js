@@ -27,6 +27,22 @@ function verifyToken(req, res, next) {
   });
 }
 
+function validateItem(req, res, next) {
+  const { name, quantity, price } = req.body;
+
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Item name is required' });
+  }
+  if (quantity === undefined || typeof quantity !== 'number' || quantity < 0) {
+    return res.status(400).json({ error: 'Quantity must be a number 0 or greater' });
+  }
+  if (price === undefined || typeof price !== 'number' || price <= 0) {
+    return res.status(400).json({ error: 'Price must be a number greater than 0' });
+  }
+
+  next();
+}
+
 app.get('/', (req, res) => {
   res.send('Hello Ron! Your server is alive.');
 });
@@ -50,7 +66,7 @@ app.get('/items', async (req, res) => {
   }
 });
 
-app.post('/items', verifyToken, async (req, res) => {
+app.post('/items', verifyToken, validateItem, async (req, res) => {
   try {
     const { name, quantity, price } = req.body;
     const result = await pool.query(
@@ -64,7 +80,7 @@ app.post('/items', verifyToken, async (req, res) => {
   }
 });
 
-app.put('/items/:id', verifyToken, async (req, res) => {
+app.put('/items/:id', verifyToken, validateItem, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, quantity, price } = req.body;
@@ -98,6 +114,48 @@ app.delete('/items/:id', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
+
+app.post('/sales', verifyToken, async (req, res) => {
+  try {
+    const { item_id, quantity_sold } = req.body;
+
+    if (!item_id || !quantity_sold || quantity_sold <= 0) {
+      return res.status(400).json({ error: 'Valid item_id and quantity_sold are required' });
+    }
+
+    const itemResult = await pool.query('SELECT * FROM items WHERE id = $1', [item_id]);
+    if (itemResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const item = itemResult.rows[0];
+
+    if (quantity_sold > item.quantity) {
+      return res.status(400).json({
+        error: `Cannot sell ${quantity_sold} units. Only ${item.quantity} in stock.`
+      });
+    }
+
+    const updatedItem = await pool.query(
+      'UPDATE items SET quantity = quantity - $1 WHERE id = $2 RETURNING *',
+      [quantity_sold, item_id]
+    );
+
+    const sale = await pool.query(
+      `INSERT INTO sales_log (item_id, item_name, quantity_sold, price_at_sale)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [item_id, item.name, quantity_sold, item.price]
+    );
+
+    res.status(201).json({
+      sale: sale.rows[0],
+      updatedItem: updatedItem.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+}); 
 
 app.post('/register', async (req, res) => {
   try {
