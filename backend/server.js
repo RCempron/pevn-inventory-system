@@ -157,6 +157,43 @@ app.post('/sales', verifyToken, async (req, res) => {
   }
 }); 
 
+app.get('/sales/summary', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        DATE(sold_at) AS sale_date,
+        SUM(quantity_sold) AS total_units,
+        SUM(quantity_sold * price_at_sale) AS total_revenue
+      FROM sales_log
+      WHERE sold_at >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(sold_at)
+      ORDER BY sale_date ASC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+app.get('/sales/top-items', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        item_name,
+        SUM(quantity_sold) AS total_units_sold,
+        SUM(quantity_sold * price_at_sale) AS total_revenue
+      FROM sales_log
+      GROUP BY item_name
+      ORDER BY total_units_sold DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
 app.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
