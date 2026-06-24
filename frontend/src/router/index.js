@@ -13,6 +13,15 @@ const routes = [
       { path: 'items', component: () => import('@/views/Items.vue') },
     ],
   },
+  {
+  path: '/',
+  component: () => import('@/components/AppLayout.vue'),
+  children: [
+    { path: 'dashboard', component: () => import('@/views/Dashboard.vue') },
+    { path: 'items', component: () => import('@/views/Items.vue') },
+    { path: 'sales', component: () => import('@/views/Sales.vue') },  // must be in here
+  ],
+}
 ]
 
 const router = createRouter({

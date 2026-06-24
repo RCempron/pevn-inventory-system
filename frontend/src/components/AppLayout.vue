@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter, RouterLink, RouterView } from 'vue-router'
-import { LayoutDashboard, Package, Bell, LogOut, Menu, X } from 'lucide-vue-next'
+import { LayoutDashboard, Package, Bell, LogOut, Menu, X, TrendingUp } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +12,7 @@ const isMobileOpen = ref(false)     // mobile drawer state
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/items', label: 'Items', icon: Package },
+  { path: '/sales', label: 'Sales', icon: TrendingUp },
 ]
 
 const isActive = (path) => route.path.startsWith(path)
