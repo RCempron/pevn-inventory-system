@@ -60,11 +60,12 @@ async function confirmDelete() {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${props.token}` }
     })
-    if (!response.ok) throw new Error('Delete failed')
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Delete failed')
     showToast(`"${name}" deleted`, 'success')
     emit('item-changed')
   } catch (err) {
-    showToast('Failed to delete item', 'error')
+    showToast(err.message, 'error')
   } finally {
     deleteTarget.value = null
   }
