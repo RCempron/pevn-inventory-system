@@ -43,8 +43,8 @@ async function login() {
       <!-- Top accent tab -->
       <div class="absolute -top-[3px] left-8 w-14 h-1.5 bg-amber-500 rounded-b"></div>
 
-      <div class="text-3xl text-center mb-1">📦</div>
-      <h1 class="text-center text-xl font-bold text-emerald-900 mb-1">My Inventory</h1>
+      <h1 class="text-center text-xl font-bold text-emerald-900 mb-1">Welcome to</h1>
+      <h1 class="text-center text-xl font-bold text-emerald-900 mb-1">Inventory Wise</h1>
       <p class="text-center text-xs text-stone-500 mb-6">Sign in to manage your stock</p>
 
       <form @submit.prevent="login" class="flex flex-col gap-1.5">
