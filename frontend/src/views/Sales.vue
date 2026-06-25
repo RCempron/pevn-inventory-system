@@ -9,7 +9,7 @@ import {
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
-const API_URL = 'http://192.168.254.106:3000'
+const API_URL = import.meta.env.VITE_API_URL
 const token = localStorage.getItem('token')
 
 const summary = ref([])

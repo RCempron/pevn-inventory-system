@@ -5,7 +5,7 @@ const props = defineProps(['token'])
 const emit = defineEmits(['item-added'])
 
 const newItem = ref({ name: '', quantity: 0, price: 0 })
-const API_URL = 'http://192.168.254.106:3000'
+const API_URL = import.meta.env.VITE_API_URL
 const formError = ref('')
 
 const toast = ref({ show: false, message: '', type: 'success' })

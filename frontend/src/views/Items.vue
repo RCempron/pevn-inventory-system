@@ -5,7 +5,7 @@ import ItemList from '@/components/ItemList.vue'
 
 const items = ref([])
 const token = localStorage.getItem('token')
-const API_URL = 'http://192.168.254.106:3000'
+const API_URL = import.meta.env.VITE_API_URL
 
 let pollInterval = null
 
