@@ -7,7 +7,8 @@ const bcrypt = require('bcrypt');
 const pool = require('./db');
 
 const app = express();
-const PORT = 3000;
+// const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -110,6 +111,11 @@ app.delete('/items/:id', verifyToken, async (req, res) => {
     }
     res.json({ message: 'Item deleted', deletedItem: result.rows[0] });
   } catch (err) {
+    if (err.code === '23503') {
+      return res.status(409).json({
+        error: 'Cannot delete this item because it has sales history.'
+      });
+    }
     console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
   }
@@ -161,12 +167,12 @@ app.get('/sales/summary', verifyToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        DATE(sold_at) AS sale_date,
+        (DATE(sold_at AT TIME ZONE 'Asia/Manila'))::text AS sale_date,
         SUM(quantity_sold) AS total_units,
         SUM(quantity_sold * price_at_sale) AS total_revenue
       FROM sales_log
       WHERE sold_at >= NOW() - INTERVAL '7 days'
-      GROUP BY DATE(sold_at)
+      GROUP BY DATE(sold_at AT TIME ZONE 'Asia/Manila')
       ORDER BY sale_date ASC
     `);
     res.json(result.rows);
@@ -187,6 +193,35 @@ app.get('/sales/top-items', verifyToken, async (req, res) => {
       GROUP BY item_name
       ORDER BY total_units_sold DESC
     `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+app.get('/sales/breakdown', verifyToken, async (req, res) => {
+  try {
+    const { period } = req.query; // 'daily' or 'weekly'
+
+    let dateFilter;
+    if (period === 'weekly') {
+      dateFilter = `sold_at >= (NOW() AT TIME ZONE 'Asia/Manila')::date - INTERVAL '6 days'`;
+    } else {
+      dateFilter = `(sold_at AT TIME ZONE 'Asia/Manila')::date = (NOW() AT TIME ZONE 'Asia/Manila')::date`;
+    }
+
+    const result = await pool.query(`
+      SELECT
+        item_name,
+        SUM(quantity_sold) AS total_quantity,
+        SUM(quantity_sold * price_at_sale) AS total_revenue
+      FROM sales_log
+      WHERE ${dateFilter}
+      GROUP BY item_name
+      ORDER BY total_quantity DESC
+    `);
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
